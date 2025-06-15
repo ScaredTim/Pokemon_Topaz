@@ -1,7 +1,7 @@
 import pygame
 from map import GameMap
 from character import Character
-
+import time
 # Initialize pygame
 pygame.init()
 
@@ -19,7 +19,7 @@ clock = pygame.time.Clock()
 # Load the map and character
 game_map = GameMap(SCREEN_WIDTH, SCREEN_HEIGHT)
 # tim = Character("assets/timothy.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-tim = Character("assets/timothy.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, width=100, height=100)
+tim = Character("assets/Down.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, width=100, height=100)
 
 # Game loop
 running = True
@@ -31,13 +31,21 @@ while running:
     # Handle key presses
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]:
-        tim.move(0, -5)
+        tim.change_image("assets/Up.png")
+        tim.move(0, -7)
+        time.sleep(0.1)  # Optional: Add a small delay for smoother movement
     if keys[pygame.K_DOWN]:
-        tim.move(0, 5)
+        tim.change_image("assets/Down.png")
+        tim.move(0, 7)
+        time.sleep(0.1)  # Optional: Add a small delay for smoother movement
     if keys[pygame.K_LEFT]:
-        tim.move(-5, 0)
+        tim.toggle_image("assets/Left1.png", "assets/Left2.png")  # Alternate between Right1 and Right2
+        tim.move(-7, 0)
+        time.sleep(0.1)  # Optional: Add a small delay for smoother movement
     if keys[pygame.K_RIGHT]:
-        tim.move(5, 0)
+        tim.toggle_image("assets/Right1.png", "assets/Right2.png")  # Alternate between Right1 and Right2
+        tim.move(7, 0)
+        time.sleep(0.1)  # Optional: Add a small delay for smoother movement
 
     # Draw everything
     screen.fill((0, 0, 0))  # Clear the screen with black
