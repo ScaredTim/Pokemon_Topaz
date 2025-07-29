@@ -8,6 +8,8 @@ class GameMap:
          # Load and scale the flower image once
         flower_img = pygame.image.load("./assets/flower.png")
         self.flower_img = pygame.transform.scale(flower_img, (40, 40))
+        self.house_rects = []
+        self.tree_rects = []
 
     def draw_tree(self, screen, x, y, trunk_width=30, trunk_height=90, leaves_radius=40):
         dark_green = (0, 100, 0)
@@ -16,6 +18,8 @@ class GameMap:
         pygame.draw.rect(screen, trunk_color, (x, y, trunk_width, trunk_height))
         # Draw leaves (circle centered above the trunk)
         pygame.draw.circle(screen, dark_green, (x + trunk_width // 2, y), leaves_radius)
+        self.tree_rects.append(pygame.Rect(x, y-leaves_radius/2-10, trunk_width, trunk_height+30))
+        
 
     def draw_house(self, screen, x, y, width=200, height=160, door_width=40, door_height=70):
         house_color = (139, 69, 19)
@@ -39,10 +43,14 @@ class GameMap:
         pygame.draw.rect(screen, door_color, (door_x, door_y, door_width, door_height))
         # Optional: door knob
         pygame.draw.circle(screen, (160, 82, 45), (door_x + door_width - 10, door_y + door_height // 2), 5)
+        self.house_rects.append(pygame.Rect(x+20, y, width-40, height))
 
     def draw_flower(self, screen, x, y):
         # Draw the flower image at (x, y)
         screen.blit(self.flower_img, (x, y))
+
+    def get_obstacle_rects(self):
+        return self.house_rects + self.tree_rects
 
     def draw(self, screen):
         # Fill the screen with the map color
@@ -76,3 +84,7 @@ class GameMap:
         self.draw_flower(screen, 200, 300)
         self.draw_flower(screen, 400, 200)
         self.draw_flower(screen, 600, 350)
+
+        # # Draw boundaries for all obstacles (for debugging)
+        # for rect in self.get_obstacle_rects():
+        #     pygame.draw.rect(screen, (255, 0, 0), rect, 2)  # Red outline, thickness 2

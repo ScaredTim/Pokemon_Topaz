@@ -27,5 +27,10 @@ class Character:
             self.change_image(image_path2)
         self.toggle_state = not self.toggle_state
 
+    def get_rect(self):
+        return pygame.Rect(self.x, self.y, self.width, self.height)    
+
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
+
+    
