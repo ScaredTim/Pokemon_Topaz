@@ -1,5 +1,5 @@
 import pygame
-from map import GameMap
+from map import GameMap, InHouseMap
 from character import Character
 import time
 # Initialize pygame
@@ -18,6 +18,9 @@ clock = pygame.time.Clock()
 
 # Load the map and character
 game_map = GameMap(SCREEN_WIDTH, SCREEN_HEIGHT)
+in_house_map = InHouseMap(SCREEN_WIDTH, SCREEN_HEIGHT)
+current_map = game_map
+in_house = False
 # tim = Character("assets/timothy.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 tim = Character("assets/Down.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, width=100, height=100)
 
@@ -31,6 +34,10 @@ def can_move(new_rect, obstacles, screen_width, screen_height):
             return False
     return True
 
+def draw_boundaries(screen, character):
+    # Draw the character's boundary as a blue rectangle
+    pygame.draw.rect(screen, (0, 0, 255), character.get_rect(), 2)
+
 # Game loop
 running = True
 while running:
@@ -40,7 +47,7 @@ while running:
 
     # Handle key presses
     keys = pygame.key.get_pressed()
-    obstacles = game_map.get_obstacle_rects()
+    obstacles = current_map.get_obstacle_rects()
     move_x, move_y = 0, 0
     if keys[pygame.K_UP]:
         tim.change_image("assets/Up.png")
@@ -65,10 +72,20 @@ while running:
             tim.move(move_x, move_y)
         time.sleep(0.1)
 
+    # Check for door entry if on outdoor map
+    if not in_house:
+        for door_rect in game_map.door_rects:
+            if tim.get_rect().colliderect(door_rect):
+                current_map = in_house_map
+                in_house = True
+                # Optionally, reposition Tim inside the house
+                tim.x, tim.y = SCREEN_WIDTH // 2, SCREEN_HEIGHT - 120
+
     # Draw everything
     screen.fill((0, 0, 0))  # Clear the screen with black
-    game_map.draw(screen)
+    current_map.draw(screen)
     tim.draw(screen)
+    draw_boundaries(screen, tim)
 
     # Update the display
     pygame.display.flip()

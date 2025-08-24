@@ -10,6 +10,10 @@ class GameMap:
         self.flower_img = pygame.transform.scale(flower_img, (40, 40))
         self.house_rects = []
         self.tree_rects = []
+        self.door_rects = [
+            pygame.Rect(120 + 200 // 2 - 40 // 2, 100 + 160 - 70, 40, 70),  # Door for house 1
+            pygame.Rect(500 + 200 // 2 - 40 // 2, 100 + 160 - 70, 40, 70),  # Door for house 2
+        ]
 
     def draw_tree(self, screen, x, y, trunk_width=30, trunk_height=90, leaves_radius=40):
         dark_green = (0, 100, 0)
@@ -43,7 +47,13 @@ class GameMap:
         pygame.draw.rect(screen, door_color, (door_x, door_y, door_width, door_height))
         # Optional: door knob
         pygame.draw.circle(screen, (160, 82, 45), (door_x + door_width - 10, door_y + door_height // 2), 5)
-        self.house_rects.append(pygame.Rect(x+20, y, width-40, height))
+        
+        # self.house_rects.append(pygame.Rect(x+20, y, width-40, height))
+        # --- House collision rects, leaving a gap for the door ---
+        left_rect = pygame.Rect(x+20, y-20, width//2 - door_width//2 - 40, height)
+        right_rect = pygame.Rect(x + width//2 + door_width//2+20, y-20, width//2 - door_width//2 - 40, height)
+        self.house_rects.append(left_rect)
+        self.house_rects.append(right_rect)
 
     def draw_flower(self, screen, x, y):
         # Draw the flower image at (x, y)
@@ -55,6 +65,8 @@ class GameMap:
     def draw(self, screen):
         # Fill the screen with the map color
         screen.fill(self.color)
+
+        self.house_rects = []
 
         # Draw houses using draw_house
         self.draw_house(screen, 120, 100)
@@ -85,6 +97,19 @@ class GameMap:
         self.draw_flower(screen, 400, 200)
         self.draw_flower(screen, 600, 350)
 
-        # # Draw boundaries for all obstacles (for debugging)
-        # for rect in self.get_obstacle_rects():
-        #     pygame.draw.rect(screen, (255, 0, 0), rect, 2)  # Red outline, thickness 2
+        # Draw boundaries for all obstacles (for debugging)
+        for rect in self.get_obstacle_rects():
+            pygame.draw.rect(screen, (255, 0, 0), rect, 2)  # Red outline, thickness 2
+
+class InHouseMap:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.color = (245, 222, 179)  # Light brown for in-house
+
+    def draw(self, screen):
+        screen.fill(self.color)
+        # You can add furniture or other in-house decorations here
+
+    def get_obstacle_rects(self):
+        return []
