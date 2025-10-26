@@ -1,0 +1,21 @@
+{
+  "mom": {
+    "default": [
+      "Hi Tim! This is our new home! It's not much, but i'm sure you'll settle in!",
+      "Tim, did you know that our neighbor is the professor of the region? Crazy, right?",
+      "Hey Tim, do you want a tip? Press X to speed up the text! And press tab to open the menu!",
+      "Tim, I heard some nasty rumors that there are some local crazy people, who think that we are in a simulation! You better stay safe!",
+      "Tim, do you know our champion's name? It's also Timothy. Small world, huh?",
+      "Tim, you should check out the book i'm reading. It's telling me about all the diffferent pokemon types!"
+    ],
+    "after_breakfast": [
+      "Have a great day at school, Tim!"
+    ]
+  },
+  "professor": {
+    "default": [
+      "Welcome to my lab!",
+      "Are you ready for your first Pokémon?"
+    ]
+  }
+}
