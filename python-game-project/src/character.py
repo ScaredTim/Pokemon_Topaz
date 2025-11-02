@@ -33,4 +33,29 @@ class Character:
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
+    def handle_movement(self, keys, obstacles, screen_width, screen_height):
+        move_x, move_y = 0, 0
+        if keys[pygame.K_UP]:
+            self.change_image("assets/Up.png")
+            move_y = -10
+        if keys[pygame.K_DOWN]:
+            self.change_image("assets/Down.png")
+            move_y = 10
+        if keys[pygame.K_LEFT]:
+            self.toggle_image("assets/Left1.png", "assets/Left2.png")
+            move_x = -10
+        if keys[pygame.K_RIGHT]:
+            self.toggle_image("assets/Right1.png", "assets/Right2.png")
+            move_x = 10
+
+        if move_x != 0 or move_y != 0:
+            new_rect = self.get_rect().move(move_x, move_y)
+            # You can use a can_move function or inline the logic here
+            if (
+                0 <= new_rect.left and new_rect.right <= screen_width and
+                0 <= new_rect.top and new_rect.bottom <= screen_height and
+                not any(new_rect.colliderect(rect) for rect in obstacles)
+            ):
+                self.move(move_x, move_y)
+
     

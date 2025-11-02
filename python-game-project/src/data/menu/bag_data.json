@@ -1,0 +1,8 @@
+{
+  "Key Items": ["Key1", "Key2"],
+  "Items": ["Item1", "Item2"],
+  "Medicine": ["Medicine1", "Medicine2"],
+  "Berries": ["Berries1", "Berries2", "Berries3"],
+  "TM/HM": ["TM1", "TM2"],
+  "Pokeballs": []
+}

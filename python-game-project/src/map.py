@@ -105,6 +105,39 @@ class GameMap:
         # for rect in self.get_obstacle_rects():
         #     pygame.draw.rect(screen, (255, 0, 0), rect, 2)  # Red outline, thickness 2
 
+    def handle_doors(self, tim, current_map, in_house, current_house, in_house_map, in_house_map2, screen_width):
+        # Only check doors if not in a house
+        if not in_house:
+            # Left house door
+            if tim.get_rect().colliderect(self.door_rects[0]):
+                current_map = in_house_map
+                in_house = True
+                current_house = 1
+                tim.x = screen_width // 2 - tim.width // 2
+                tim.y = 300
+            # Right house door
+            elif tim.get_rect().colliderect(self.door_rects[1]):
+                current_map = in_house_map2
+                in_house = True
+                current_house = 2
+                tim.x = screen_width // 2 - tim.width // 2
+                tim.y = 300
+        else:
+            # Leaving left house
+            if current_house == 1 and tim.get_rect().colliderect(in_house_map.door_rect):
+                current_map = self
+                in_house = False
+                current_house = None
+                tim.x = 120 + 200 // 2 - tim.width // 2
+                tim.y = 100 + 160
+            # Leaving right house
+            elif current_house == 2 and tim.get_rect().colliderect(in_house_map2.door_rect):
+                current_map = self
+                in_house = False
+                current_house = None
+                tim.x = 500 + 200 // 2 - tim.width // 2
+                tim.y = 100 + 160
+        return current_map, in_house, current_house
 class InHouseMap:
     def __init__(self, width, height):
         self.width = width
@@ -117,6 +150,7 @@ class InHouseMap:
         self.text_box_lines = []      # List of lines for the current dialogue
         self.text_box_page = 0        # Current page index
         self.lines_per_page = 3       # Number of lines per page (adjust for your box size)
+        self.ignore_space_for_scroll = False
         # Load and scale furniture images
         self.table_img = pygame.transform.scale(
             pygame.image.load("./assets/Table_w_book.png"), (140, 140)
@@ -147,7 +181,7 @@ class InHouseMap:
 
         # Define the return door (e.g., at the bottom center)
         self.door_rect = pygame.Rect(width // 2 - 30, height - 80, 60, 60)
-        # Define furniture collision rects (positions must match blit positions and sizes)
+        # # Define furniture collision rects (positions must match blit positions and sizes)
         self.furniture_rects = [
             pygame.Rect(20, 20, 330, 150),  # Cooking equipment
             pygame.Rect(self.width//2 - 180, self.height//2 - 30, 140, 140),  # Table
@@ -248,13 +282,16 @@ class InHouseMap:
         screen.blit(self.chair_img, (self.width//2 - 250, self.height//2 + 40))
         screen.blit(self.cooking_img, (20, 20))
         screen.blit(self.stairs_img, (self.width - 200, 10))
-
+        
         # Draw Mom
         screen.blit(self.mom_img, (self.mom_x, self.mom_y))
 
-        # Draw door (optional visual)
-        pygame.draw.rect(screen, (100, 100, 100), self.door_rect, 2)
-
+        # Draw door
+        pygame.draw.rect(screen, (139, 69, 19), self.door_rect)  # Brown filled door
+        pygame.draw.rect(screen, (255, 255, 255), self.door_rect, 2)  # White outline
+        knob_x = self.door_rect.right - 15
+        knob_y = self.door_rect.centery
+        pygame.draw.circle(screen, (218, 165, 32), (knob_x, knob_y), 5)
     def draw_textbox(self, screen):
         if self.show_text_box and self.text_box_lines:
             box_height = self.lines_per_page * 28 + 20
@@ -271,3 +308,20 @@ class InHouseMap:
             for i, line in enumerate(lines_to_draw):
                 text_surf = font.render(line, True, (255, 255, 255))
                 screen.blit(text_surf, (box_rect.x + 10, box_rect.y + 10 + i*28))
+        # print("draw_textbox called")
+        # print("Drawing textbox:", self.show_text_box, self.text_box_lines)
+
+    def handle_mom_interaction(self, tim, space_pressed, font, box_width, mom_dialogue_index):
+        # Only interact if Tim is touching mom and space is pressed and textbox is not open
+        if self.mom_rect.colliderect(tim.get_rect()):
+            mom_dialogue = self.get_dialogue("mom", "default")
+            selected_line = mom_dialogue[mom_dialogue_index]
+            self.set_text_box_text(selected_line, font, box_width)
+            self.show_text_box = True
+            self.ignore_space_for_scroll = True
+            self.text_scroll_index = 0
+            self.text_scroll_timer = 0
+            mom_dialogue_index = (mom_dialogue_index + 1) % len(mom_dialogue)
+        # print("handle_mom_interaction called")
+        # print("Trying to interact with mom:", self.mom_rect.colliderect(tim.get_rect()), space_pressed, not self.show_text_box)
+        return mom_dialogue_index

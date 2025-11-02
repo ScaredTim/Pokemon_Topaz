@@ -1,0 +1,87 @@
+import pygame
+import time
+from map import GameMap, InHouseMap
+from character import Character
+
+# Initialize pygame
+pygame.init()
+
+# Screen dimensions
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+
+# Create the game window
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Tim's Adventure")
+
+# Clock for controlling the frame rate
+clock = pygame.time.Clock()
+
+# Load maps and character
+game_map = GameMap(SCREEN_WIDTH, SCREEN_HEIGHT)
+in_house_map = InHouseMap(SCREEN_WIDTH, SCREEN_HEIGHT)
+in_house_map2 = InHouseMap(SCREEN_WIDTH, SCREEN_HEIGHT)
+tim = Character("assets/Down.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, width=80, height=100)
+
+# Game state
+current_map = game_map
+in_house = False
+current_house = None
+mom_dialogue_index = 0
+font = pygame.font.SysFont(None, 28)
+box_width = 320
+running = True
+
+while running:
+    space_pressed = False
+    x_pressed = False
+
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            space_pressed = True
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+            x_pressed = True
+
+    keys = pygame.key.get_pressed()
+    obstacles = current_map.get_obstacle_rects()
+
+    # Movement (delegated to Character)
+    if not (in_house and in_house_map.show_text_box):
+        tim.handle_movement(keys, obstacles, SCREEN_WIDTH, SCREEN_HEIGHT)
+        time.sleep(0.1)
+
+    # Mom interaction (delegated to InHouseMap)
+    if in_house and current_house == 1 and space_pressed and not in_house_map.show_text_box:
+        mom_dialogue_index = in_house_map.handle_mom_interaction(
+            tim, space_pressed, font, box_width, mom_dialogue_index
+        )
+        in_house_map.show_text_box = True
+        in_house_map.ignore_space_for_scroll = True  # Ignore the next space press
+
+    # Close textbox on space
+    if in_house_map.show_text_box and space_pressed:
+        if in_house_map.ignore_space_for_scroll:
+           in_house_map.ignore_space_for_scroll = False
+        else:
+           in_house_map.toggle_text_box()
+    # Door logic (delegated to GameMap/InHouseMap)
+    current_map, in_house, current_house = game_map.handle_doors(
+        tim, current_map, in_house, current_house, in_house_map, in_house_map2, SCREEN_WIDTH
+    )
+
+    # Update mom image and text scroll
+    in_house_map.update_mom_image(tim.get_rect())
+    in_house_map.update_text_scroll(space_pressed)
+
+    # Draw everything
+    screen.fill((0, 0, 0))
+    current_map.draw(screen)
+    tim.draw(screen)
+    if in_house:
+        current_map.draw_textbox(screen)
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
