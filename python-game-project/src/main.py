@@ -2,6 +2,7 @@ import pygame
 from map import GameMap, InHouseMap
 from character import Character
 from menu import Menu, BagMenu
+from battle import Battle
 import time
 import random
 import os
@@ -47,6 +48,8 @@ def draw_boundaries(screen, character):
 menu = Menu(SCREEN_WIDTH, SCREEN_HEIGHT)
 bag_menu = BagMenu(SCREEN_WIDTH, SCREEN_HEIGHT)
 
+battle = Battle(SCREEN_WIDTH, SCREEN_HEIGHT)
+
 # Game loop
 font = pygame.font.SysFont(None, 28)
 box_width = 320  # Or whatever width you use for your text box
@@ -58,6 +61,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        
+       
+
         menu.handle_event(event)  # <-- handle menu events here   
         if menu.open and menu.options[menu.selected] == "Bag":
         # If Enter was pressed, open the bag menu
@@ -71,13 +77,34 @@ while running:
         # Also, handle events for bag_menu if it's open:
         if bag_menu.open:
             bag_menu.handle_event(event)
+            # After menu.handle_event(event)
+            if menu.open and getattr(menu, "enter_pressed", False):
+                if menu.options[menu.selected] == "Bag":
+                    bag_menu.open = True
+                    menu.open = False  # Close main menu
+                    menu.enter_pressed = False  # Reset flag
+        
+        if menu.open and menu.options[menu.selected] == "Test Battle":
+        # If Enter was pressed, open the bag menu
+        # You need a way to detect that Enter was pressed this frame
+        # For example, set a flag in Menu.handle_event when Enter is pressed:
+            if getattr(menu, "enter_pressed", False):
+                battle.open = True
+                menu.enter_pressed = False  # Reset the flag
+                menu.open = False           # Close main menu when bag opens
+        # If in battle mode, only handle battle events
+        if battle.open:
+            battle.handle_event(event)
+            if not battle.open:
+                menu.open = True  # Return to menu when battle closes
+            continue
         # Check for space keydown
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             space_pressed = True    
         if event.type == pygame.KEYDOWN and event.key == pygame.K_x:
             x_pressed = True
    # Block game logic if menu is open
-    if not menu.open and not bag_menu.open:
+    if not menu.open and not bag_menu.open and not battle.open:
         # Handle key presses
         keys = pygame.key.get_pressed()
         obstacles = current_map.get_obstacle_rects()
@@ -161,15 +188,17 @@ while running:
         
     # Draw everything
     screen.fill((0, 0, 0))  # Clear the screen with black
-    current_map.draw(screen)
-    tim.draw(screen)
-    if in_house:
-        current_map.draw_textbox(screen)
-    # draw_boundaries(screen, time
-    # Update the display
-    menu.draw(screen)  # <-- draw menu on top
-    if bag_menu.open:
-        bag_menu.draw(screen)
+    if battle.open:
+        battle.draw(screen)
+    else:
+        current_map.draw(screen)
+        tim.draw(screen)
+        if in_house:
+            current_map.draw_textbox(screen)
+  
+        menu.draw(screen)  # <-- draw menu on top
+        if bag_menu.open:
+            bag_menu.draw(screen)
     pygame.display.flip()
 
     # Cap the frame rate
