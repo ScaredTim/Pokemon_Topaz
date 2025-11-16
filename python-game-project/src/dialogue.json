@@ -8,14 +8,17 @@
       "Tim, do you know our champion's name? It's also Timothy. Small world, huh?",
       "Tim, you should check out the book i'm reading. It's telling me about all the diffferent pokemon types!"
     ],
-    "after_breakfast": [
-      "Have a great day at school, Tim!"
+    "intro": [
+      "Tim! Guess what? We're in our new home! Remember, you first have to decorate yoru room!"
     ]
   },
   "professor": {
     "default": [
-      "Welcome to my lab!",
+      "Placeholder",
       "Are you ready for your first Pokémon?"
+    ],
+    "intro": [
+      "Hey! You there! Please help me! I'm being attacked by a, uh, scary pokemon! Quick, pick a pokeball out of the my bag and fend it off!"
     ]
   }
 }
