@@ -1,0 +1,37 @@
+{
+  "TENTACOOL": {
+    "name": "TENTACOOL",
+    "level": 11,
+    "hp": 600,
+    "hp_max": 600,
+    "moves": ["POISON STING", "ACID"],
+    "move_info": [
+      {"type": "POISON", "pp": "35/35", "damage":15},
+      {"type": "POISON", "pp": "30/30", "damage":40}
+    ]
+  },
+  "ZUBAT": {
+    "name": "ZUBAT",
+    "level": 9,
+    "hp": 604,
+    "hp_max": 604,
+    "moves": ["BITE", "WING ATTACK"],
+    "move_info": [
+      {"type": "DARK", "pp": "25/25", "damage":60},
+      {"type": "FLYING", "pp": "35/35", "damage":60}
+    ]
+  },
+  "GARCHOMP": {
+    "name":"GARCHOMP",
+    "level":63,
+    "hp": 245,
+    "hp_max": 245,
+    "moves": ["EARTHQUAKE", "SWORDS DANCE", "OUTRAGE", "STONE EDGE"],
+    "move_info": [
+        {"type": "GROUND", "pp": "10/10", "damage":100},
+        {"type": "NORMAL", "pp": "20/20", "damage":0},
+        {"type": "DRAGON", "pp": "15/15", "damage":120},
+        {"type": "ROCK", "pp": "5/5", "damage":100}
+    ]
+  }
+}

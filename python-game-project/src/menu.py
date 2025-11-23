@@ -33,7 +33,7 @@ class Menu:
             for i, option in enumerate(self.options):
                 color = (255, 255, 0) if i == self.selected else (255, 255, 255)
                 text_surf = font.render(option, True, color)
-                screen.blit(text_surf, (box_x + 40, box_y + 40 + i * 40))
+                screen.blit(text_surf, (box_x + 40, box_y + 20 + i * 40))
 class BagMenu(Menu):
     def __init__(self, screen_width, screen_height):
         super().__init__(screen_width, screen_height)

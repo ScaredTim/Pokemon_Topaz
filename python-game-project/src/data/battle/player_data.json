@@ -1,0 +1,13 @@
+{
+  "name": "MARSHTOMP",
+  "level": 19,
+  "hp": 58,
+  "hp_max": 58,
+  "moves": ["TACKLE", "MUD-SLAP", "MUD SHOT", "WATER GUN"],
+  "move_info": [
+    {"type": "NORMAL", "pp": "35/35", "damage":40},
+    {"type": "GROUND", "pp": "10/10", "damage":20},
+    {"type": "GROUND", "pp": "10/10", "damage":55},
+    {"type": "WATER", "pp": "25/25",  "damage":40}
+  ]
+}

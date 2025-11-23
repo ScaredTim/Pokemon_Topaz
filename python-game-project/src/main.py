@@ -1,8 +1,9 @@
 import pygame
+import json
 from map import GameMap, InHouseMap
 from character import Character
 from menu import Menu, BagMenu
-from battle import Battle
+from battle import Battle, Battler
 import time
 import random
 import os
@@ -48,7 +49,34 @@ def draw_boundaries(screen, character):
 menu = Menu(SCREEN_WIDTH, SCREEN_HEIGHT)
 bag_menu = BagMenu(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-battle = Battle(SCREEN_WIDTH, SCREEN_HEIGHT)
+# Load player and enemy info from JSON
+with open("data/battle/player_data.json") as f:
+    player_data = json.load(f)
+with open("data/battle/enemy_data.json") as f:
+    enemy_data = json.load(f)
+
+current_enemy_key = random.choice(list(enemy_data.keys()))
+enemy_info = enemy_data[current_enemy_key]
+
+player = Battler(
+    name=player_data["name"],
+    level=player_data["level"],
+    hp=player_data["hp"],
+    hp_max=player_data["hp_max"],
+    moves=player_data["moves"],
+    move_info=player_data["move_info"]
+)
+
+enemy = Battler(
+    name=enemy_info["name"],
+    level=enemy_info["level"],
+    hp=enemy_info["hp"],
+    hp_max=enemy_info["hp_max"],
+    moves=enemy_info["moves"],
+    move_info=enemy_info["move_info"]
+)
+
+battle = Battle(SCREEN_WIDTH, SCREEN_HEIGHT, player, enemy)
 
 # Game loop
 font = pygame.font.SysFont(None, 28)
@@ -90,11 +118,34 @@ while running:
         # For example, set a flag in Menu.handle_event when Enter is pressed:
             if getattr(menu, "enter_pressed", False):
                 battle.open = True
+                battle.just_opened = True 
                 menu.enter_pressed = False  # Reset the flag
                 menu.open = False           # Close main menu when bag opens
         # If in battle mode, only handle battle events
         if battle.open:
-            battle.handle_event(event)
+            if battle.just_opened:
+                battle.just_opened = False  # Skip input for this frame
+            else:
+                battle.handle_event(event)
+            
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+                # Pick a random different enemy
+                enemy_keys = list(enemy_data.keys())
+                enemy_keys.remove(current_enemy_key)
+                if enemy_keys:
+                    new_enemy_key = random.choice(enemy_keys)
+                    current_enemy_key = new_enemy_key
+                    enemy_info = enemy_data[current_enemy_key]
+                    enemy = Battler(
+                        name=enemy_info["name"],
+                        level=enemy_info["level"],
+                        hp=enemy_info["hp"],
+                        hp_max=enemy_info["hp_max"],
+                        moves=enemy_info["moves"],
+                        move_info=enemy_info["move_info"]
+                    )
+                  
+                    battle.enemy = enemy
             if not battle.open:
                 menu.open = True  # Return to menu when battle closes
             continue
@@ -189,7 +240,10 @@ while running:
     # Draw everything
     screen.fill((0, 0, 0))  # Clear the screen with black
     if battle.open:
+        battle.update_blink()
         battle.draw(screen)
+        if battle.turn == "enemy" and not battle.action_text_showing():
+            battle.update()
     else:
         current_map.draw(screen)
         tim.draw(screen)
