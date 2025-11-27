@@ -63,6 +63,8 @@ player = Battler(
     level=player_data["level"],
     hp=player_data["hp"],
     hp_max=player_data["hp_max"],
+    attack=player_data["attack"],
+    defense=player_data["defense"],
     moves=player_data["moves"],
     move_info=player_data["move_info"]
 )
@@ -72,6 +74,8 @@ enemy = Battler(
     level=enemy_info["level"],
     hp=enemy_info["hp"],
     hp_max=enemy_info["hp_max"],
+    attack=enemy_info["attack"],
+    defense=enemy_info["defense"],
     moves=enemy_info["moves"],
     move_info=enemy_info["move_info"]
 )
@@ -121,6 +125,9 @@ while running:
                 battle.just_opened = True 
                 menu.enter_pressed = False  # Reset the flag
                 menu.open = False           # Close main menu when bag opens
+                # Play battle music loop
+                pygame.mixer.music.load("./assets/music/DecisiveEncounter.mp3")
+                pygame.mixer.music.play(-1)  # -1 means loop forever
         # If in battle mode, only handle battle events
         if battle.open:
             if battle.just_opened:
@@ -141,6 +148,8 @@ while running:
                         level=enemy_info["level"],
                         hp=enemy_info["hp"],
                         hp_max=enemy_info["hp_max"],
+                        attack=enemy_info["attack"],
+                        defense=enemy_info["defense"],
                         moves=enemy_info["moves"],
                         move_info=enemy_info["move_info"]
                     )

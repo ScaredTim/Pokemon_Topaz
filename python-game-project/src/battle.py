@@ -3,11 +3,13 @@ import time
 import random
 
 class Battler:
-    def __init__(self, name, level, hp, hp_max, moves, move_info):
+    def __init__(self, name, level, hp, hp_max, attack, defense, moves, move_info):
         self.name = name
         self.level = level
         self.hp = hp
         self.hp_max = hp_max
+        self.attack = attack
+        self.defense = defense
         self.moves = moves
         self.move_info = move_info
 
@@ -57,9 +59,29 @@ class Battle:
                 # Player attacks
                 move_idx = self.selected
                 move_name = self.player.moves[move_idx]
-                damage = self.player.move_info[move_idx]["damage"]
-                self.enemy.hp = max(0, self.enemy.hp - damage)
-                self.last_action_text = f"{self.player.name} used {move_name}! Damage: {damage}"
+                basebasedamage = self.player.move_info[move_idx]["damage"]
+                level = self.player.level
+                crit = random.uniform(0,1)
+                attack = self.player.attack
+                defense = self.player.defense
+                accuracy = (self.player.move_info[move_idx]["accuracy"])
+                if self.player.move_info[move_idx]["stab"]==1:
+                    stab=1.5
+                else:
+                    stab=1
+                basedamage = ((2*level/5+2)*basebasedamage*(attack/defense))/50+2
+                if crit<0.04:
+                    basedamage=basedamage*1.7
+                    crit_text=" A critical hit!"
+                else:
+                    crit_text=""
+                damage = int(basedamage * stab * random.uniform(0.85, 1.0))   
+                if random.uniform(0,99) > accuracy:
+                    damage = 0  # Missed attack
+                    self.last_action_text = f"{self.player.name} used {move_name}! But it missed!"
+                else:
+                    self.enemy.hp = max(0, self.enemy.hp - damage)
+                    self.last_action_text = f"{self.player.name} used {move_name}! {crit_text} Damage: {damage}"
                 self.action_display_time = 2
                 self.action_display_start = time.time()
                 self.last_damage = damage
@@ -69,9 +91,24 @@ class Battle:
         # Enemy attacks
         move_idx = random.randint(0, len(self.enemy.moves) - 1)
         move_name = self.enemy.moves[move_idx]
-        damage = self.enemy.move_info[move_idx]["damage"]
-        self.player.hp = max(0, self.player.hp - damage)
-        self.last_action_text = f"{self.enemy.name} used {move_name}! Damage: {damage}"
+        basebasedamage = self.enemy.move_info[move_idx]["damage"]
+        level = self.enemy.level
+        attack = self.enemy.attack
+        defense = self.enemy.defense
+        accuracy = (self.enemy.move_info[move_idx]["accuracy"])
+
+        if self.enemy.move_info[move_idx]["stab"]==1:
+            stab=1.5
+        else:
+            stab=1
+        basedamage = ((2*level/5+2)*basebasedamage*(attack/defense))/50+2
+        damage = int(basedamage * stab * random.uniform(0.85, 1.0))
+        if random.uniform(0,99) > accuracy:
+            damage = 0  # Missed attack
+            self.last_action_text = f"{self.enemy.name} used {move_name}! But it missed!"
+        else:
+            self.player.hp = max(0, self.player.hp - damage)
+            self.last_action_text = f"{self.enemy.name} used {move_name}! Damage: {damage}"
         self.action_display_time = 2
         self.action_display_start = time.time()
         self.last_damage = damage
