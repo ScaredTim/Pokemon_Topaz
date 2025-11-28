@@ -15,6 +15,7 @@ pygame.init()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 mom_dialogue_index = 0
+current_music=None
 # Create the game window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tim's Adventure")
@@ -31,7 +32,12 @@ current_map = game_map
 in_house = False
 # tim = Character("assets/timothy.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 tim = Character("assets/Down.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, width=80, height=100)
-
+def play_music(music_path):
+    global current_music
+    if current_music != music_path:
+        pygame.mixer.music.load(music_path)
+        pygame.mixer.music.play(-1)
+        current_music = music_path
 def can_move(new_rect, obstacles, screen_width, screen_height):
     # Check screen boundaries
     if not (0 <= new_rect.left and new_rect.right <= screen_width and 0 <= new_rect.top and new_rect.bottom <= screen_height):
@@ -89,7 +95,6 @@ running = True
 while running:
     space_pressed = False
     x_pressed = False
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -125,9 +130,6 @@ while running:
                 battle.just_opened = True 
                 menu.enter_pressed = False  # Reset the flag
                 menu.open = False           # Close main menu when bag opens
-                # Play battle music loop
-                pygame.mixer.music.load("./assets/music/DecisiveEncounter.mp3")
-                pygame.mixer.music.play(-1)  # -1 means loop forever
         # If in battle mode, only handle battle events
         if battle.open:
             if battle.just_opened:
@@ -136,7 +138,7 @@ while running:
                 battle.handle_event(event)
             
             if event.type == pygame.KEYDOWN and event.key == pygame.K_c:
-                # Pick a random different enemy
+                  # Pick a random different enemy
                 enemy_keys = list(enemy_data.keys())
                 enemy_keys.remove(current_enemy_key)
                 if enemy_keys:
@@ -244,8 +246,11 @@ while running:
         # Tim interacts with mom
             in_house_map.update_mom_image(tim.get_rect())
         in_house_map.update_text_scroll(space_pressed)
-
-        
+    if battle.open:
+        play_music("./assets/music/DecisiveEncounter.mp3")
+    else:
+                #HEY FUTURE TIMOTHY. YOU NEED TO CHANGE THIS WHEN YOU GET OUT OF LITTLEROOT TOWN. - 2025 Timothy
+        play_music("./assets/music/APlaceCalledHome.mp3")
     # Draw everything
     screen.fill((0, 0, 0))  # Clear the screen with black
     if battle.open:
@@ -262,9 +267,11 @@ while running:
         menu.draw(screen)  # <-- draw menu on top
         if bag_menu.open:
             bag_menu.draw(screen)
+    
     pygame.display.flip()
 
     # Cap the frame rate
     clock.tick(60)
     # print("Text box lines:", in_house_map.text_box_lines)
+    
 pygame.quit()
