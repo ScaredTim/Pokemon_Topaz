@@ -12,6 +12,37 @@ class Battler:
         self.defense = defense
         self.moves = moves
         self.move_info = move_info
+class Player(Battler):
+    def __init__(self, data):
+        super().__init__(
+            name=data["name"],
+            level=data["level"],
+            hp=data["hp"],
+            hp_max=data["hp_max"],
+            attack=data["attack"],
+            defense=data["defense"],
+            moves=data["moves"],
+            move_info=data["move_info"]
+        )
+        # Player-specific fields
+        self.exp = data.get("exp", 0)
+        self.exp_max = data.get("exp_max", 100)
+        # Add more player-specific fields if needed
+class Enemy(Battler):
+    def __init__(self, data):
+        super().__init__(
+            name=data["name"],
+            level=data["level"],
+            hp=data["hp"],
+            hp_max=data["hp_max"],
+            attack=data["attack"],
+            defense=data["defense"],
+            moves=data["moves"],
+            move_info=data["move_info"]
+        )
+        # Enemy-specific fields
+        self.expyield = data.get("expyield", 0)
+        # Add more enemy-specific fields if needed
 
 class Battle:
     def __init__(self, screen_width, screen_height, player, enemy):
@@ -29,7 +60,24 @@ class Battle:
         self.last_damage = 0
         self.action_display_time = 0  # in seconds
         self.action_display_start = None
+        self.player_sprite = pygame.image.load(f"assets/pokemonsprites/{player.name.lower()}.png").convert_alpha()
+        self.enemy_sprite = pygame.image.load(f"assets/pokemonsprites/{enemy.name.lower()}.png").convert_alpha()
+        # Resize sprites (adjust sizes as needed)
+        self.player_sprite = pygame.transform.scale(self.player_sprite, (170, 155))
+        self.enemy_sprite = pygame.transform.scale(self.enemy_sprite, (160, 160))
+        self.player_dead = False
+        self.death_message_start = None
+        self.death_message_duration = 2  # seconds
+        self.showing_message = False
 
+    def show_death_message(self):
+        self.player_dead = True
+        self.death_message_start = time.time()
+
+    def set_enemy(self, enemy):
+        self.enemy = enemy
+        self.enemy_sprite = pygame.image.load(f"assets/pokemonsprites/{enemy.name.lower()}.png").convert_alpha()
+        self.enemy_sprite = pygame.transform.scale(self.enemy_sprite, (160, 160))
     def update_blink(self):
         # Call this once per frame before draw
         if time.time() - self.blink_start > 0.35:  # blink every 0.35s
@@ -37,6 +85,14 @@ class Battle:
             self.blink_start = time.time()
 
     def handle_event(self, event):
+        if self.showing_message and event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            self.showing_message = False
+            self.last_action_text = ""
+            self.action_display_start = None
+            # Only switch turn if it was enemy's move
+            if self.turn == "enemy":
+                self.turn = "player"
+            return
         if self.turn == "player" and event.type == pygame.KEYDOWN:
             row = self.selected // 2
             col = self.selected % 2
@@ -79,9 +135,11 @@ class Battle:
                 if random.uniform(0,99) > accuracy:
                     damage = 0  # Missed attack
                     self.last_action_text = f"{self.player.name} used {move_name}! But it missed!"
+                    self.showing_message = True
                 else:
                     self.enemy.hp = max(0, self.enemy.hp - damage)
                     self.last_action_text = f"{self.player.name} used {move_name}! {crit_text} Damage: {damage}"
+                    self.showing_message = True
                 self.action_display_time = 2
                 self.action_display_start = time.time()
                 self.last_damage = damage
@@ -106,9 +164,11 @@ class Battle:
         if random.uniform(0,99) > accuracy:
             damage = 0  # Missed attack
             self.last_action_text = f"{self.enemy.name} used {move_name}! But it missed!"
+            self.showing_message = True
         else:
             self.player.hp = max(0, self.player.hp - damage)
             self.last_action_text = f"{self.enemy.name} used {move_name}! Damage: {damage}"
+            self.showing_message = True
         self.action_display_time = 2
         self.action_display_start = time.time()
         self.last_damage = damage
@@ -169,7 +229,13 @@ class Battle:
         player_hp_y = lower_rect.y + 60
         pygame.draw.rect(screen, (25, 55, 30), (player_hp_x - 2, player_hp_y - 2, hp_bar_w + 4, hp_bar_h + 4), border_radius=8)
         player_hp_ratio = self.player.hp / self.player.hp_max
-        pygame.draw.rect(screen, (90, 200, 90), (player_hp_x, player_hp_y, int(hp_bar_w * player_hp_ratio), hp_bar_h), border_radius=8)
+        if player_hp_ratio<=0.2:
+            hp_color=(200, 40, 40)
+        elif player_hp_ratio<=0.5:
+            hp_color=(240, 220, 60)
+        else:
+            hp_color=(90, 200, 90)
+        pygame.draw.rect(screen, hp_color, (player_hp_x, player_hp_y, int(hp_bar_w * player_hp_ratio), hp_bar_h), border_radius=8)
 
         hp_text = f"{self.player.hp}/{self.player.hp_max}"
         hp_surf = player_font.render(hp_text, True, (25, 55, 30))
@@ -180,7 +246,7 @@ class Battle:
         exp_x = player_hp_x
         exp_y = player_hp_y - 18  # 18 pixels above HP bar
         pygame.draw.rect(screen, (25, 55, 120), (exp_x, exp_y, exp_bar_w, exp_bar_h), border_radius=6)  # border
-        pygame.draw.rect(screen, (80, 160, 255), (exp_x, exp_y, int(exp_bar_w * 0.25), exp_bar_h), border_radius=6)  # filled 25%
+        pygame.draw.rect(screen, (80, 160, 255), (exp_x, exp_y, int(exp_bar_w * (self.player.exp/self.player.exp_max)), exp_bar_h), border_radius=6)  # filled 25%
         pygame.draw.rect(screen, (25, 55, 30), (exp_x-2, exp_y-2, exp_bar_w+4, exp_bar_h+4), 2, border_radius=8)  # outline
         # Actions (leaf tiles)
         action_font = pygame.font.SysFont(None, 36)
@@ -223,13 +289,31 @@ class Battle:
             type_surf = player_font.render(f"TYPE/{move['type']}", True, (25, 55, 30))
             screen.blit(pp_surf, (info_box.x + 16, info_box.y + 12))
             screen.blit(type_surf, (info_box.x + 16, info_box.y + 42))
-
+        
+        # Draw player sprite (bottom left, above menu)
+        player_sprite_x = 60
+        player_sprite_y = self.screen_height - 200 - 145  # above the menu panel
+        screen.blit(self.player_sprite, (player_sprite_x, player_sprite_y))
+        # Draw enemy sprite (top right, below enemy info)
+        enemy_sprite_x = self.screen_width - 200
+        enemy_sprite_y = 130  # below enemy info box
+        screen.blit(self.enemy_sprite, (enemy_sprite_x, enemy_sprite_y))
+        
         # Show last action and damage
         info_font = pygame.font.SysFont(None, 28)
-        if self.last_action_text:
-            action_surf = info_font.render(self.last_action_text, True, (30, 30, 30))
-            screen.blit(action_surf, (40, self.screen_height - 240))
-            # Only clear after 2 seconds
-            if self.action_display_start and time.time() - self.action_display_start > self.action_display_time:
-                self.last_action_text = ""
-                self.action_display_start = None
+        if self.showing_message and self.last_action_text:
+            # Draw message box over action area, but not over HP/EXP
+            msg_box_rect = pygame.Rect(lower_rect.x + 30, lower_rect.y + 75, self.screen_width - 60, 120)
+            pygame.draw.rect(screen, (245, 245, 220), msg_box_rect, border_radius=18)
+            pygame.draw.rect(screen, (40, 80, 45), msg_box_rect, 3, border_radius=18)
+            info_font = pygame.font.SysFont(None, 32)
+            lines = self.last_action_text.split('\n')
+            for i, line in enumerate(lines):
+                msg_surf = info_font.render(line, True, (30, 30, 30))
+                screen.blit(msg_surf, (msg_box_rect.x + 20, msg_box_rect.y + 20 + i * 36))
+            prompt_surf = info_font.render("Press Enter to continue...", True, (80, 80, 80))
+            screen.blit(prompt_surf, (msg_box_rect.x + 20, msg_box_rect.y + 80))
+        if self.player_dead:
+            death_surf = info_font.render(f"{self.player.name} has fainted!", True, (200, 30, 30))
+            screen.blit(death_surf, (40, self.screen_height - 270))
+            

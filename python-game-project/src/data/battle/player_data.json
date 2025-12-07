@@ -1,15 +1,46 @@
 {
   "name": "MARSHTOMP",
-  "level": 19,
-  "hp": 58,
-  "hp_max": 58,
-  "attack":40,
-  "defense":35,
-  "moves": ["TACKLE", "MUD-SLAP", "MUD SHOT", "WATER GUN"],
+  "level": 8,
+  "exp": -115,
+  "exp_max": 409,
+  "hp": 82,
+  "hp_max": 82,
+  "attack": 56,
+  "defense": 48,
+  "moves": [
+    "TACKLE",
+    "MUD-SLAP",
+    "MUD SHOT",
+    "WATER GUN"
+  ],
   "move_info": [
-    {"type": "NORMAL", "pp": "35/35", "damage":40, "stab":0, "accuracy":95},
-    {"type": "GROUND", "pp": "10/10", "damage":20, "stab":1, "accuracy":100},
-    {"type": "GROUND", "pp": "10/10", "damage":55, "stab":1, "accuracy":95},
-    {"type": "WATER", "pp": "25/25",  "damage":40, "stab":1, "accuracy":100}
+    {
+      "type": "NORMAL",
+      "pp": "35/35",
+      "damage": 40,
+      "stab": 0,
+      "accuracy": 95
+    },
+    {
+      "type": "GROUND",
+      "pp": "10/10",
+      "damage": 20,
+      "stab": 1,
+      "accuracy": 100
+    },
+    {
+      "type": "GROUND",
+      "pp": "10/10",
+      "damage": 55,
+      "stab": 1,
+      "accuracy": 95
+    },
+    {
+      "type": "WATER",
+      "pp": "25/25",
+      "damage": 40,
+      "stab": 1,
+      "accuracy": 100
+    }
   ]
 }

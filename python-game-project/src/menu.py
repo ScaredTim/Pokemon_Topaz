@@ -4,7 +4,7 @@ import os
 
 class Menu:
     def __init__(self, screen_width, screen_height):
-        self.options = ["Bag", "Pokemon", "Map", "Settings", "Save", "Test Battle", "Exit"]
+        self.options = ["Bag", "Pokemon", "Map", "Settings", "Save", "Load", "Test Battle", "Exit"]
         self.selected = 0
         self.open = False
         self.screen_width = screen_width

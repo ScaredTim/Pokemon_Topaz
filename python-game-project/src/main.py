@@ -3,7 +3,7 @@ import json
 from map import GameMap, InHouseMap
 from character import Character
 from menu import Menu, BagMenu
-from battle import Battle, Battler
+from battle import Battle, Player, Enemy
 import time
 import random
 import os
@@ -30,6 +30,7 @@ in_house_map2 = InHouseMap(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 current_map = game_map
 in_house = False
+current_house = None
 # tim = Character("assets/timothy.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 tim = Character("assets/Down.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, width=80, height=100)
 def play_music(music_path):
@@ -52,6 +53,51 @@ def draw_boundaries(screen, character):
     # Draw the character's boundary as a blue rectangle
     pygame.draw.rect(screen, (0, 0, 255), character.get_rect(), 2)
 
+def save_game(character, current_map, in_house, current_house, player):
+    save_data = {
+        "x": character.x,
+        "y": character.y,
+        "in_house": in_house,
+        "current_house": current_house,
+        "current_map": "in_house" if in_house else "game_map"
+    }
+    with open("./data/map/player_location.json", "w") as f:
+        json.dump(save_data, f)
+    # Save player info
+    player_data = {
+        "name": player.name,
+        "level": player.level,
+        "exp": player.exp,
+        "exp_max": player.exp_max,
+        "hp": player.hp,
+        "hp_max": player.hp_max,
+        "attack": player.attack,
+        "defense": player.defense,
+        "moves": player.moves,
+        "move_info": player.move_info
+    }
+    with open("./data/battle/player_data.json", "w") as f:
+        json.dump(player_data, f, indent=2)
+    print("Game saved!")
+
+def load_game(character):
+    try:
+        with open("./data/map/player_location.json", "r") as f:
+            save_data = json.load(f)
+        character.x = save_data["x"]
+        character.y = save_data["y"]
+        in_house = save_data.get("in_house", False)
+        current_house = save_data.get("current_house", None)
+        if save_data.get("current_map") == "in_house":
+            current_map = in_house_map if current_house == 1 else in_house_map2
+        else:
+            current_map = game_map
+        print("Game loaded!")
+        return current_map, in_house, current_house
+    except Exception as e:
+        print("Failed to load game:", e)
+        return None, None, None
+    
 menu = Menu(SCREEN_WIDTH, SCREEN_HEIGHT)
 bag_menu = BagMenu(SCREEN_WIDTH, SCREEN_HEIGHT)
 
@@ -63,29 +109,8 @@ with open("data/battle/enemy_data.json") as f:
 
 current_enemy_key = random.choice(list(enemy_data.keys()))
 enemy_info = enemy_data[current_enemy_key]
-
-player = Battler(
-    name=player_data["name"],
-    level=player_data["level"],
-    hp=player_data["hp"],
-    hp_max=player_data["hp_max"],
-    attack=player_data["attack"],
-    defense=player_data["defense"],
-    moves=player_data["moves"],
-    move_info=player_data["move_info"]
-)
-
-enemy = Battler(
-    name=enemy_info["name"],
-    level=enemy_info["level"],
-    hp=enemy_info["hp"],
-    hp_max=enemy_info["hp_max"],
-    attack=enemy_info["attack"],
-    defense=enemy_info["defense"],
-    moves=enemy_info["moves"],
-    move_info=enemy_info["move_info"]
-)
-
+player = Player(player_data)
+enemy = Enemy(enemy_info)
 battle = Battle(SCREEN_WIDTH, SCREEN_HEIGHT, player, enemy)
 
 # Game loop
@@ -121,6 +146,20 @@ while running:
                     menu.open = False  # Close main menu
                     menu.enter_pressed = False  # Reset flag
         
+        if menu.open and menu.options[menu.selected] == "Save":
+            if getattr(menu, "enter_pressed", False):
+                save_game(tim, current_map, in_house, current_house, player)
+                menu.enter_pressed = False  # Reset the flag
+
+        if menu.open and menu.options[menu.selected] == "Load":
+            if getattr(menu, "enter_pressed", False):
+                loaded_map, loaded_in_house, loaded_current_house = load_game(tim)
+                if loaded_map is not None:
+                    current_map = loaded_map
+                    in_house = loaded_in_house
+                    current_house = loaded_current_house
+                menu.enter_pressed = False  # Reset the flag        
+
         if menu.open and menu.options[menu.selected] == "Test Battle":
         # If Enter was pressed, open the bag menu
         # You need a way to detect that Enter was pressed this frame
@@ -129,6 +168,8 @@ while running:
                 battle.open = True
                 battle.just_opened = True 
                 menu.enter_pressed = False  # Reset the flag
+                battle.player_dead = False           # <-- Reset dead flag
+                battle.death_message_start = None    # <-- Reset timer
                 menu.open = False           # Close main menu when bag opens
         # If in battle mode, only handle battle events
         if battle.open:
@@ -137,28 +178,47 @@ while running:
             else:
                 battle.handle_event(event)
             
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_c:
-                  # Pick a random different enemy
+            if (event.type == pygame.KEYDOWN and event.key == pygame.K_c) or battle.enemy.hp <= 0:
+                if battle.enemy.hp <= 0:
+                    player.exp += battle.enemy.expyield
+                # Level up as many times as needed
+                while player.exp >= player.exp_max:
+                    player.level += 1
+                    hp_increase = random.randint(2, 4)
+                    atk_increase = random.randint(1, 3)
+                    def_increase = random.randint(1, 3)
+                    player.hp_max += hp_increase
+                    player.attack += atk_increase
+                    player.defense += def_increase
+                    player.hp += hp_increase
+                    player.exp_max = int(0.8 * (player.level ** 3))
+                    player.exp -= player.exp_max
+                # Pick a random different enemy
                 enemy_keys = list(enemy_data.keys())
                 enemy_keys.remove(current_enemy_key)
                 if enemy_keys:
                     new_enemy_key = random.choice(enemy_keys)
                     current_enemy_key = new_enemy_key
                     enemy_info = enemy_data[current_enemy_key]
-                    enemy = Battler(
-                        name=enemy_info["name"],
-                        level=enemy_info["level"],
-                        hp=enemy_info["hp"],
-                        hp_max=enemy_info["hp_max"],
-                        attack=enemy_info["attack"],
-                        defense=enemy_info["defense"],
-                        moves=enemy_info["moves"],
-                        move_info=enemy_info["move_info"]
-                    )
-                  
+                    enemy = Enemy(enemy_info)
+                    battle.set_enemy(enemy)
                     battle.enemy = enemy
-            if not battle.open:
+                else:
+                    # If no other enemies, just reset current enemy
+                    battle.enemy.hp = battle.enemy.hp_max    
+            if not battle.open or player.hp <= 0:
+                if player.hp <= 0 and not battle.player_dead:
+                    battle.show_death_message()
+                    battle.showing_message = True
+                # Wait for death message to finish
+                if battle.player_dead and time.time() - battle.death_message_start < battle.death_message_duration:
+                    # Don't exit to menu yet, just show message
+                    continue
+                # After message duration, exit to menu and reset battle
+                battle.open = False
                 menu.open = True  # Return to menu when battle closes
+                enemy.hp = enemy.hp_max  # Reset enemy HP for next battle
+                player.hp = player.hp_max  # Reset player HP for next battle
             continue
         # Check for space keydown
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
