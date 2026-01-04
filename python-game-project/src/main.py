@@ -1,6 +1,7 @@
+#IMPORTANT!!! REMEMBER TO CHANGE THE MOVEMENT SPEED BACK TO 10 WHEN YOU FINISH TESTING --- IGNORE ---
 import pygame
 import json
-from map import GameMap, InHouseMap
+from map import GameMap, InHouseMap, Route1_1Map
 from character import Character
 from menu import Menu, BagMenu
 from battle import Battle, Player, Enemy
@@ -27,11 +28,12 @@ clock = pygame.time.Clock()
 game_map = GameMap(SCREEN_WIDTH, SCREEN_HEIGHT)
 in_house_map = InHouseMap(SCREEN_WIDTH, SCREEN_HEIGHT)
 in_house_map2 = InHouseMap(SCREEN_WIDTH, SCREEN_HEIGHT)
+route1_1_map = Route1_1Map(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 current_map = game_map
 in_house = False
 current_house = None
-# tim = Character("assets/timothy.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
 tim = Character("assets/Down.png", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, width=80, height=100)
 def play_music(music_path):
     global current_music
@@ -49,9 +51,20 @@ def can_move(new_rect, obstacles, screen_width, screen_height):
             return False
     return True
 
-def draw_boundaries(screen, character):
+def get_camera_pos(character, map_obj):
+    # Center camera on character
+    cam_x = character.x + character.width // 2 - SCREEN_WIDTH // 2
+    cam_y = character.y + character.height // 2 - SCREEN_HEIGHT // 2
+    # Clamp camera to map bounds
+    cam_x = max(0, min(cam_x, map_obj.width - SCREEN_WIDTH))
+    cam_y = max(0, min(cam_y, map_obj.height - SCREEN_HEIGHT))
+    return cam_x, cam_y
+
+def draw_boundaries(screen, character, offset=(0, 0)):
     # Draw the character's boundary as a blue rectangle
-    pygame.draw.rect(screen, (0, 0, 255), character.get_rect(), 2)
+    rect = character.get_rect()
+    rect = rect.move(offset)
+    pygame.draw.rect(screen, (0, 0, 255), rect, 2)
 
 def save_game(character, current_map, in_house, current_house, player):
     save_data = {
@@ -234,21 +247,23 @@ while running:
             move_x, move_y = 0, 0
             if keys[pygame.K_UP]:
                 tim.change_image("assets/Up.png")
-                move_y = -10
+                move_y = -30
             if keys[pygame.K_DOWN]:
                 tim.change_image("assets/Down.png")
-                move_y = 10
+                move_y = 30
             if keys[pygame.K_LEFT]:
                 tim.toggle_image("assets/Left1.png", "assets/Left2.png")
-                move_x = -10
+                move_x = -30
             if keys[pygame.K_RIGHT]:
                 tim.toggle_image("assets/Right1.png", "assets/Right2.png")
-                move_x = 10
+                move_x = 30
 
             # Only move if not blocked by textbox
+            map_w = current_map.width
+            map_h = current_map.height
             if move_x != 0 or move_y != 0:
                 new_rect = tim.get_rect().move(move_x, move_y)
-                if can_move(new_rect, obstacles, SCREEN_WIDTH, SCREEN_HEIGHT):
+                if can_move(new_rect, obstacles, map_w, map_h):
                     tim.move(move_x, move_y)
                 time.sleep(0.1)
 
@@ -273,7 +288,7 @@ while running:
                         
 
         # Check for door entry if on outdoor map
-        if not in_house:
+        if not in_house and current_map == game_map:
         # Left door
             if tim.get_rect().colliderect(game_map.door_rects[0]):
                 current_map = in_house_map
@@ -288,6 +303,18 @@ while running:
                 current_house = 2
                 tim.x = SCREEN_WIDTH // 2 - tim.width // 2
                 tim.y = 300
+        # Transition from game_map to route1_1
+        if current_map == game_map and tim.get_rect().colliderect(game_map.transition_rect):
+            current_map = route1_1_map
+            tim.x = int(route1_1_map.spawn_x - tim.width // 2)
+            tim.y = int(route1_1_map.spawn_y - tim.height // 2)  # Place at bottom of route1_1
+
+        # Transition from route1_1 to game_map
+        if current_map == route1_1_map and tim.get_rect().colliderect(route1_1_map.transition_rect):
+            current_map = game_map
+            tim.x = SCREEN_WIDTH // 2 - tim.width // 2
+            tim.y = 60  # Place at top of game_map        
+
         if in_house:
             if current_house == 1 and tim.get_rect().colliderect(in_house_map.door_rect):
                 current_map = game_map
@@ -319,11 +346,12 @@ while running:
         if battle.turn == "enemy" and not battle.action_text_showing():
             battle.update()
     else:
-        current_map.draw(screen)
-        tim.draw(screen)
+        camera_x, camera_y = get_camera_pos(tim, current_map)
+        current_map.draw(screen, camera_x, camera_y)
+        tim.draw(screen, offset=(-camera_x, -camera_y))
+        draw_boundaries(screen, tim, offset=(-camera_x, -camera_y))  # <-- SHOW HITBOXES for character
         if in_house:
-            current_map.draw_textbox(screen)
-  
+            current_map.draw_textbox(screen, camera_x, camera_y)
         menu.draw(screen)  # <-- draw menu on top
         if bag_menu.open:
             bag_menu.draw(screen)

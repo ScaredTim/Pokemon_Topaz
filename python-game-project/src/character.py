@@ -1,5 +1,4 @@
 import pygame
-
 class Character:
     def __init__(self, image_path, x, y, width=50, height=50):
         # Load and scale the image
@@ -28,10 +27,13 @@ class Character:
         self.toggle_state = not self.toggle_state
 
     def get_rect(self):
-        return pygame.Rect(self.x, self.y, self.width, self.height)    
+        hitbox_width = int(self.width * 0.6)  # 60% of image width
+        hitbox_x = self.x + (self.width - hitbox_width) // 2  # center the hitbox
+        # return pygame.Rect(hitbox_x, self.y, hitbox_width, self.height)
+        return pygame.Rect(hitbox_x, self.y, hitbox_width, self.height)
 
-    def draw(self, screen):
-        screen.blit(self.image, (self.x, self.y))
+    def draw(self, screen, offset=(0, 0)):
+        screen.blit(self.image, (self.x + offset[0], self.y + offset[1]))
 
     def handle_movement(self, keys, obstacles, screen_width, screen_height):
         move_x, move_y = 0, 0
