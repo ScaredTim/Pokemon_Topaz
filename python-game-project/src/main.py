@@ -19,7 +19,7 @@ mom_dialogue_index = 0
 current_music=None
 # Create the game window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Tim's Adventure")
+pygame.display.set_caption("Pokemon Topaz")
 
 # Clock for controlling the frame rate
 clock = pygame.time.Clock()
@@ -242,7 +242,6 @@ while running:
     if not menu.open and not bag_menu.open and not battle.open:
         # Handle key presses
         keys = pygame.key.get_pressed()
-        obstacles = current_map.get_obstacle_rects()
         if not (in_house and in_house_map.show_text_box):
             move_x, move_y = 0, 0
             if keys[pygame.K_UP]:
@@ -258,14 +257,43 @@ while running:
                 tim.toggle_image("assets/Right1.png", "assets/Right2.png")
                 move_x = 30
 
-            # Only move if not blocked by textbox
-            map_w = current_map.width
-            map_h = current_map.height
             if move_x != 0 or move_y != 0:
                 new_rect = tim.get_rect().move(move_x, move_y)
+                obstacles = current_map.get_obstacle_rects()
+                map_w = current_map.width
+                map_h = current_map.height
+
+                # Ledge logic (unchanged)
+                if isinstance(current_map, Route1_1Map):
+                    crossed_ledge = False
+                    for ledge in current_map.ledge_rects:
+                        if move_y > 0 and tim.get_rect().bottom <= ledge.top and new_rect.colliderect(ledge):
+                            tim.y = ledge.bottom
+                            crossed_ledge = True
+                            break
+                        elif new_rect.colliderect(ledge):
+                            obstacles = obstacles + [ledge]
+                    if crossed_ledge:
+                        continue
+
                 if can_move(new_rect, obstacles, map_w, map_h):
-                    tim.move(move_x, move_y)
-                time.sleep(0.1)
+                    tim.x += move_x
+                    tim.y += move_y              
+                time.sleep(0.1)    
+                    # # Special ledge logic
+                # if isinstance(current_map, Route1_1Map):
+                #     ledge = current_map.ledge_rect
+                #     if move_y > 0:  # Moving down
+                #         # If character is above the ledge and would collide after moving
+                #         if tim.get_rect().bottom <= ledge.top and new_rect.colliderect(ledge):
+                #             # Teleport character to just below the ledge
+                #             tim.y = ledge.bottom + tim.height
+                #             # Optionally, you can skip normal movement for this frame
+                #             continue
+                #         elif new_rect.colliderect(ledge):
+                #             obstacles = obstacles + [ledge]  # block as normal
+                #     elif new_rect.colliderect(ledge):
+                #         obstacles = obstacles + [ledge]
 
         # Handle mom interaction and paging
             # Handle mom interaction and paging

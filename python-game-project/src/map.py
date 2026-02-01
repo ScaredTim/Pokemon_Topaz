@@ -368,7 +368,57 @@ class Route1_1Map:
                 surface.blit(self.grass_tile, (x, y))
         
         self.obstacle_rects = []  # Reset each frame
+# ...existing code...
 
+        ledge_left_img = pygame.image.load("./assets/ledgeleft.png")
+        ledge_img = pygame.image.load("./assets/ledge.png")
+        ledge_right_img = pygame.image.load("./assets/ledgeright.png")
+        ledge_height = 40
+        ledge_width = 100
+        ledge_left_img = pygame.transform.scale(ledge_left_img, (ledge_width, ledge_height))
+        ledge_img = pygame.transform.scale(ledge_img, (ledge_width, ledge_height))
+        ledge_right_img = pygame.transform.scale(ledge_right_img, (ledge_width, ledge_height))
+
+        # Main ledge
+        ledge_y = self.circle_cy - 1250
+        ledge_x_start = self.circle_cx - 750
+        ledge_x_end = self.circle_cx - 650 + 76
+        num_middle = (ledge_x_end - ledge_x_start) // ledge_width - 1
+        surface.blit(ledge_left_img, (ledge_x_start, ledge_y))
+        for i in range(num_middle):
+            surface.blit(ledge_img, (ledge_x_start + ledge_width * (i + 1), ledge_y))
+        surface.blit(ledge_right_img, (ledge_x_start + ledge_width * (num_middle + 1), ledge_y))
+
+        # Ledge 1 (moved down and left)
+        ledge_y1 = self.circle_cy - 1050 + 40
+        ledge_x_start1 = self.circle_cx - 290 - 40
+        ledge_x_end1 = self.circle_cx - 190 + 76 - 40
+        num_middle1 = (ledge_x_end1 - ledge_x_start1) // ledge_width - 1
+        surface.blit(ledge_left_img, (ledge_x_start1, ledge_y1))
+        for i in range(num_middle1):
+            surface.blit(ledge_img, (ledge_x_start1 + ledge_width * (i + 1), ledge_y1))
+        surface.blit(ledge_right_img, (ledge_x_start1 + ledge_width * (num_middle1 + 1), ledge_y1))
+
+        # Ledge 2 (moved down and left)
+        ledge_y2 = self.circle_cy - 850 + 40
+        ledge_x_start2 = self.circle_cx - 750 - 40
+        ledge_x_end2 = self.circle_cx - 650 + 76 - 40
+        num_middle2 = (ledge_x_end2 - ledge_x_start2) // ledge_width - 1
+        surface.blit(ledge_left_img, (ledge_x_start2, ledge_y2))
+        for i in range(num_middle2):
+            surface.blit(ledge_img, (ledge_x_start2 + ledge_width * (i + 1), ledge_y2))
+        surface.blit(ledge_right_img, (ledge_x_start2 + ledge_width * (num_middle2 + 1), ledge_y2))
+
+        # Store all ledge rects for special logic
+        self.ledge_rects = [
+            pygame.Rect(ledge_x_start, ledge_y, ledge_x_end - ledge_x_start, ledge_height),
+            pygame.Rect(ledge_x_start1, ledge_y1, ledge_x_end1 - ledge_x_start1, ledge_height),
+            pygame.Rect(ledge_x_start2, ledge_y2, ledge_x_end2 - ledge_x_start2, ledge_height),
+        ]
+
+        # Optionally, draw the hitboxes for debugging
+        for ledge_rect in self.ledge_rects:
+            pygame.draw.rect(surface, (0, 255, 0), ledge_rect, 2)
         # Entrance at bottom center
         pygame.draw.rect(surface, (255, 255, 0), self.transition_rect)
 
@@ -422,8 +472,6 @@ class Route1_1Map:
             (self.circle_cx - 150, self.circle_cy - 850),
             (self.circle_cx - 50, self.circle_cy - 850),
             (self.circle_cx + 50, self.circle_cy - 800),
-            (self.circle_cx - 650, self.circle_cy - 850),
-            (self.circle_cx - 750, self.circle_cy - 850),
             (self.circle_cx - 650, self.circle_cy - 650),
             (self.circle_cx - 750, self.circle_cy - 650),
             (self.circle_cx - 850, self.circle_cy - 650),
@@ -438,8 +486,6 @@ class Route1_1Map:
             (self.circle_cx - 590, self.circle_cy - 1050),
             (self.circle_cx - 490, self.circle_cy - 1050),
             (self.circle_cx - 390, self.circle_cy - 1050),
-            (self.circle_cx - 290, self.circle_cy - 1050),
-            (self.circle_cx - 190, self.circle_cy - 1050),
             (self.circle_cx + 50, self.circle_cy - 1000),
             (self.circle_cx + 50, self.circle_cy - 900),
             (self.circle_cx + 50, self.circle_cy - 1100),
@@ -451,8 +497,6 @@ class Route1_1Map:
             (self.circle_cx - 350, self.circle_cy - 1300),
             (self.circle_cx - 450, self.circle_cy - 1300),
             (self.circle_cx - 550, self.circle_cy - 1300),
-            (self.circle_cx - 650, self.circle_cy - 1300),
-            (self.circle_cx - 750, self.circle_cy - 1300),
             (self.circle_cx - 990, self.circle_cy - 1250),
             (self.circle_cx - 990, self.circle_cy - 1150),
             (self.circle_cx - 990, self.circle_cy - 1350),
@@ -480,7 +524,7 @@ class Route1_1Map:
         #SHOW HITBOXES
         for rect in self.get_obstacle_rects():
             pygame.draw.rect(surface, (255, 0, 0), rect, 2)  # Red outline, thickness 2
-        screen.blit(surface, (-camera_x, -camera_y))
+            screen.blit(surface, (-camera_x, -camera_y))
 
     def draw_medium_tree(self, surface, x, y):
         trunk_color = (101, 67, 33)

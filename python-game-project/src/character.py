@@ -28,9 +28,10 @@ class Character:
 
     def get_rect(self):
         hitbox_width = int(self.width * 0.6)  # 60% of image width
+        hitbox_height = int(self.height * 0.4)  # Only bottom 40% collides
         hitbox_x = self.x + (self.width - hitbox_width) // 2  # center the hitbox
-        # return pygame.Rect(hitbox_x, self.y, hitbox_width, self.height)
-        return pygame.Rect(hitbox_x, self.y, hitbox_width, self.height)
+        hitbox_y = self.y + self.height - hitbox_height  # Align hitbox to feet
+        return pygame.Rect(hitbox_x, hitbox_y, hitbox_width, hitbox_height)
 
     def draw(self, screen, offset=(0, 0)):
         screen.blit(self.image, (self.x + offset[0], self.y + offset[1]))
